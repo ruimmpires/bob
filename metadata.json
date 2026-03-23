@@ -1,0 +1,5 @@
+{
+  "name": "Bob o Construtor",
+  "description": "Plataforma de gestão de obras inspirada no Bob o Construtor, permitindo donos de obra e construtores gerirem projetos, custos e estados de execução.",
+  "requestFramePermissions": []
+}

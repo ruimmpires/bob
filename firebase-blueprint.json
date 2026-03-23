@@ -1,0 +1,57 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "User Profile",
+      "description": "User profile information including role.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "description": "The unique identifier for the user." },
+        "email": { "type": "string", "description": "The user's email address." },
+        "displayName": { "type": "string", "description": "The user's display name." },
+        "role": { "type": "string", "enum": ["owner", "constructor", "admin"], "description": "The user's role in the system." }
+      },
+      "required": ["uid", "email", "displayName", "role"]
+    },
+    "Work": {
+      "title": "Work Project",
+      "description": "A construction project managed in the platform.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "The unique identifier for the work." },
+        "ownerUid": { "type": "string", "description": "The UID of the owner who created the work." },
+        "constructorUid": { "type": "string", "description": "The UID of the constructor assigned to the work." },
+        "location": { "type": "string", "description": "The location of the work." },
+        "details": { "type": "string", "description": "Detailed description of the work." },
+        "costs": { "type": "number", "description": "Estimated or actual costs." },
+        "materials": { "type": "string", "description": "List of materials needed." },
+        "startDate": { "type": "string", "format": "date", "description": "Estimated start date." },
+        "endDate": { "type": "string", "format": "date", "description": "Estimated end date." },
+        "status": { "type": "string", "enum": ["pending", "accepted", "in-progress", "completed"], "description": "Current status of the work." },
+        "isPublic": { "type": "boolean", "description": "Whether the work is publicly visible." },
+        "comments": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "uid": { "type": "string" },
+              "displayName": { "type": "string" },
+              "text": { "type": "string" },
+              "timestamp": { "type": "string", "format": "date-time" }
+            }
+          }
+        }
+      },
+      "required": ["ownerUid", "location", "details", "status"]
+    }
+  },
+  "firestore": {
+    "/users/{uid}": {
+      "schema": "UserProfile",
+      "description": "User profiles collection."
+    },
+    "/works/{workId}": {
+      "schema": "Work",
+      "description": "Construction projects collection."
+    }
+  }
+}

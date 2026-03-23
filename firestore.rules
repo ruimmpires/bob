@@ -1,0 +1,97 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    //
+    // Collection: users
+    // Document ID: {uid}
+    // Fields:
+    //   - uid: string (required)
+    //   - email: string (required)
+    //   - displayName: string (required)
+    //   - role: string (required, ['owner', 'constructor', 'admin'])
+    //
+    // Collection: works
+    // Document ID: {workId}
+    // Fields:
+    //   - id: string (optional)
+    //   - ownerUid: string (required)
+    //   - ownerName: string (required)
+    //   - constructorUid: string (optional)
+    //   - constructorName: string (optional)
+    //   - location: string (required)
+    //   - details: string (required)
+    //   - costs: number (optional)
+    //   - materials: string (optional)
+    //   - startDate: string (optional, ISO 8601)
+    //   - endDate: string (optional, ISO 8601)
+    //   - status: string (required, ['pending', 'accepted', 'in-progress', 'completed', 'cancelled'])
+    //   - comments: list (optional)
+    //
+    // ===============================================================
+
+    // Helper Functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() &&
+        (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' ||
+         (request.auth.token.email == "rui.marques.pires@gmail.com" && request.auth.token.email_verified == true));
+    }
+
+    function isValidUser(data) {
+      return data.keys().hasAll(['uid', 'email', 'displayName', 'role']) &&
+             data.uid is string &&
+             data.email is string &&
+             data.displayName is string &&
+             data.role in ['owner', 'constructor', 'admin'];
+    }
+
+    function isValidWork(data) {
+      return data.keys().hasAll(['ownerUid', 'ownerName', 'location', 'details', 'status']) &&
+             data.ownerUid is string &&
+             data.ownerName is string &&
+             data.location is string && data.location.size() < 200 &&
+             data.details is string && data.details.size() < 2000 &&
+             data.status in ['pending', 'accepted', 'in-progress', 'completed', 'cancelled'] &&
+             (!('costs' in data) || data.costs is number) &&
+             (!('materials' in data) || data.materials is string) &&
+             (!('constructorUid' in data) || data.constructorUid is string) &&
+             (!('isPublic' in data) || data.isPublic is bool) &&
+             (!('comments' in data) || data.comments is list);
+    }
+
+    match /test/connection {
+      allow get: if true;
+    }
+
+    match /users/{userId} {
+      allow read: if isAuthenticated();
+      allow create: if isOwner(userId) && isValidUser(request.resource.data) && (request.resource.data.role == 'owner' || isAdmin());
+      allow update: if isAuthenticated() && (isAdmin() || (isOwner(userId) && request.resource.data.role == resource.data.role && isValidUser(request.resource.data)));
+    }
+
+    match /works/{workId} {
+      allow get, list: if (resource.data.isPublic == true) || (isAuthenticated() && (
+        isAdmin() || 
+        (resource.data.ownerUid == request.auth.uid) || 
+        (resource.data.constructorUid == request.auth.uid)
+      ));
+      allow create: if isAuthenticated() && isValidWork(request.resource.data) && request.resource.data.ownerUid == request.auth.uid;
+      allow update: if isAuthenticated() && isValidWork(request.resource.data) && (
+        isAdmin() || 
+        (resource.data.ownerUid == request.auth.uid) || 
+        (resource.data.constructorUid == request.auth.uid)
+      );
+      allow delete: if isAdmin();
+    }
+  }
+}
