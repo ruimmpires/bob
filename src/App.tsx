@@ -420,7 +420,7 @@ function SidebarLink({ icon: Icon, label, active, onClick }: { icon: any, label:
   );
 }
 
-function DashboardView({ key }: { key?: string }) {
+function DashboardView() {
   const { profile } = useAuth();
   const [works, setWorks] = useState<Work[]>([]);
   const [loading, setLoading] = useState(true);
@@ -1160,7 +1160,7 @@ function WorkDetailView({ work, onClose, constructors }: { work: Work, onClose: 
   );
 }
 
-function AdminView({ key }: { key?: string }) {
+function AdminView() {
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [loading, setLoading] = useState(true);
   const [adminTab, setAdminTab] = useState<'users' | 'works'>('users');
@@ -1278,7 +1278,7 @@ function AdminView({ key }: { key?: string }) {
   );
 }
 
-function CalendarView({ key }: { key?: string }) {
+function CalendarView() {
   const { profile } = useAuth();
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [works, setWorks] = useState<Work[]>([]);
